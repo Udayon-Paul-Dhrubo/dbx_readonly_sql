@@ -76,6 +76,35 @@ def execute_read_only_arrow(connection: Any, sql_text: str, parameters: Any = No
     return _execute(connection, sql_text, parameters, "fetchall_arrow")
 
 
+def run_query(
+    sql_text: str,
+    *,
+    server_hostname: str,
+    http_path: str,
+    access_token: str,
+    parameters: Any = None,
+) -> Any:
+    """Connect, run one read-only query, close, and return rows or the exception.
+
+    Credentials are explicit arguments; this function never reads environment
+    variables. Validation happens before connecting. Connection errors are
+    returned the same way as query errors (the original exception object).
+    """
+    try:
+        validate_read_only_sql(sql_text)
+
+        from databricks import sql
+
+        with sql.connect(
+            server_hostname=server_hostname,
+            http_path=http_path,
+            access_token=access_token,
+        ) as connection:
+            return execute_read_only(connection, sql_text, parameters)
+    except Exception as exc:
+        return exc
+
+
 def execute_or_error(connection: Any, sql_text: str, parameters: Any = None) -> Any:
     """Return native rows or the *same exception instance*, without serialization.
 

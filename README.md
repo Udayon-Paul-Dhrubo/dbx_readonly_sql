@@ -5,13 +5,14 @@ Minimal Python package for running exactly one read-only SELECT-family statement
 - `validate_read_only_sql(query)` parses with SQLGlot's Databricks dialect.
 - `execute_read_only(connection, query, parameters=None)` returns the connector's original `list[Row]` without changing values, labels, ordering, or SQL text, and **does not catch or wrap execution errors**.
 - `execute_read_only_arrow(...)` returns the connector's `pyarrow.Table`, preserving Arrow column metadata and types.
+- `run_query(sql, server_hostname=..., http_path=..., access_token=...)` is the simplest entry point: it connects, runs one read-only query, closes, and returns rows or the original exception object. Credentials are explicit arguments; the package never reads environment variables itself.
 - `execute_or_error(...)` returns either the original row list or the original exception object **as a value**. Choose this only if your application expects exceptions as returned values.
 
 ## Team install (from GitHub)
 
 ```powershell
 python -m venv .venv; .venv\Scripts\activate
-pip install "git+https://github.com/Udayon-Paul-Dhrubo/dbx_readonly_sql.git@v0.1.0"
+pip install "git+https://github.com/Udayon-Paul-Dhrubo/dbx_readonly_sql.git@v0.2.0"
 ```
 
 Set these environment variables (see `.env.example`; never commit real values):
@@ -20,7 +21,7 @@ Set these environment variables (see `.env.example`; never commit real values):
 - `DATABRICKS_HTTP_PATH`: e.g. `/sql/1.0/warehouses/<id>`
 - `DATABRICKS_TOKEN`: your own personal access token, or a shared read-only service principal token
 
-To upgrade, change the `@v0.1.0` tag to the newest release.
+To upgrade, change the `@v0.2.0` tag to the newest release.
 
 ## Install (development)
 
@@ -35,7 +36,22 @@ pytest
 
 Requires Python 3.10+, SQL Warehouse connection details, and working authentication.
 
-## Usage (PAT demo)
+## Quick usage
+
+```python
+import os
+from dbx_readonly_sql import run_query
+
+result = run_query(
+    "SELECT * FROM samples.nyctaxi.trips LIMIT 2",
+    server_hostname=os.environ["DATABRICKS_SERVER_HOSTNAME"],
+    http_path=os.environ["DATABRICKS_HTTP_PATH"],
+    access_token=os.environ["DATABRICKS_TOKEN"],
+)
+print(result)  # list of Row objects, or the exception object
+```
+
+## Usage with your own connection (PAT demo)
 
 Set `DATABRICKS_SERVER_HOSTNAME` (hostname only, no `https://`), `DATABRICKS_HTTP_PATH`, and `DATABRICKS_TOKEN` as environment variables.
 

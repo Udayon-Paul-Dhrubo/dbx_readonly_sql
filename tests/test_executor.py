@@ -9,6 +9,7 @@ from dbx_readonly_sql import (
     ReadOnlyQueryError,
     execute_or_error,
     execute_read_only,
+    run_query,
     validate_read_only_sql,
 )
 
@@ -98,3 +99,36 @@ def test_unsafe_queries_are_never_executed():
         execute_read_only(connection, "DELETE FROM t")
 
     connection.cursor.assert_not_called()
+
+
+def test_run_query_returns_validation_error_without_connecting(monkeypatch):
+    from databricks import sql
+
+    connect = MagicMock()
+    monkeypatch.setattr(sql, "connect", connect)
+    result = run_query("DROP TABLE t", server_hostname="h", http_path="p", access_token="t")
+    assert isinstance(result, ReadOnlyQueryError)
+    connect.assert_not_called()
+
+
+def test_run_query_returns_connection_error_as_value(monkeypatch):
+    from databricks import sql
+
+    err = RuntimeError("no network")
+    monkeypatch.setattr(sql, "connect", MagicMock(side_effect=err))
+    result = run_query("SELECT 1", server_hostname="h", http_path="p", access_token="t")
+    assert result is err
+
+
+def test_run_query_returns_rows_and_passes_credentials(monkeypatch):
+    from databricks import sql
+
+    rows = [("x",)]
+    conn = MagicMock()
+    conn.__enter__.return_value = conn
+    conn.cursor.return_value.__enter__.return_value.fetchall.return_value = rows
+    connect = MagicMock(return_value=conn)
+    monkeypatch.setattr(sql, "connect", connect)
+    result = run_query("SELECT 1", server_hostname="h", http_path="p", access_token="t")
+    assert result is rows
+    connect.assert_called_once_with(server_hostname="h", http_path="p", access_token="t")

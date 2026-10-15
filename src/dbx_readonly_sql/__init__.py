@@ -5,6 +5,7 @@ from .executor import (
     execute_or_error,
     execute_read_only,
     execute_read_only_arrow,
+    run_query,
     validate_read_only_sql,
 )
 
@@ -13,5 +14,6 @@ __all__ = [
     "execute_or_error",
     "execute_read_only",
     "execute_read_only_arrow",
+    "run_query",
     "validate_read_only_sql",
 ]
