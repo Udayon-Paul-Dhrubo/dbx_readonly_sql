@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dbx-readonly-sql"
+version = "0.1.0"
+description = "Minimal read-only Databricks SQL query executor with native results and exceptions"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "databricks-sql-connector>=3.0",
+  "sqlglot>=27.0",
+]
+
+[project.optional-dependencies]
+arrow = ["pyarrow>=14"]
+test = ["pytest>=8"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
